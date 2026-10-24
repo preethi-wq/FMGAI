@@ -1,0 +1,13 @@
+# torch / torchvision: use the CUDA build that Colab ships (torch>=2.6 is required by diffusers 0.41.0)
+diffusers==0.41.0
+transformers>=4.41.2
+accelerate>=0.31.0
+datasets
+huggingface_hub
+bitsandbytes
+lpips
+scikit-image
+ftfy
+tensorboard
+pyarrow
+matplotlib

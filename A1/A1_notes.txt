@@ -1,0 +1,22 @@
+
+he assignment is attached. 
+
+Phase 1 is the declaration described on page 1. 
+
+Deadline: October 10 
+
+Submit: one PDF per group, here on Google Classroom. Make sure your declaration covers every item listed under "Phase 1 — Declaration" in the PDF.
+
+
+
+
+
+
+Phase 2 covers the experiments (Run 0, Run A, Run B) and the four submission components listed under "Phase 2 - Submission Components" in the assignment PDF: code, fine-tuning logs, inference trajectories, and report. 
+
+
+Deadline: 31 October 2026 
+
+Submit: One zip per group, here on Google Classroom. 
+
+Use the exponent x and the task, model, and dataset from your Phase 1 declaration. The report must follow the section order given in the PDF.
