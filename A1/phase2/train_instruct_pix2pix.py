@@ -1072,6 +1072,7 @@ def main():
             revision=args.revision,
             variant=args.variant,
         )
+        pipeline.to(dtype=torch.float16)  # ADDED: store weights in fp16 (2.1 GB, not 4.3 GB); inference runs in fp16
         pipeline.save_pretrained(args.output_dir)
 
         if args.push_to_hub:

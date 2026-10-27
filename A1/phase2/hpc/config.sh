@@ -16,8 +16,8 @@ CPU_MEM="8G"
 CPU_CPUS=4
 
 # ---- Paths ---------------------------------------------------------------------------------------
-# Needs about 40 GB: model cache 4.3 GB, Python env 8 GB, dataset 0.3 GB, two saved pipelines and
-# their last training state about 25 GB. If $HOME has a small quota, point this at scratch/project space.
+# Needs about 40 GB: model cache 4.3 GB, Python env 8 GB, dataset 0.3 GB, two saved pipelines (2.1 GB each) and
+# their last training state (5.2 GB each), about 20 GB in all. If $HOME has a small quota, point this at scratch/project space.
 WORK_ROOT="$HOME/FMGAI_A1"
 RESULTS_DIR="$WORK_ROOT/results"   # outputs/, eval/, figures/, slurm logs and the submission zip
 DATA_DIR="$WORK_ROOT/data"

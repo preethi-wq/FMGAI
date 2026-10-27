@@ -1,6 +1,6 @@
 # Changes to train_instruct_pix2pix.py (diffusers v0.41.0 example)
 
-14 change blocks; 13 lines marked `# MODIFIED`, 54 lines marked `# ADDED`.
+15 change blocks; 13 lines marked `# MODIFIED`, 55 lines marked `# ADDED`.
 
 ## Change 1 (insert)
 
@@ -260,4 +260,18 @@
 1069              scheduler=sr_common.make_ddim(noise_scheduler.config, run_betas),  # ADDED: save this run's schedule
 1070              safety_checker=None,  # ADDED: the NSFW checker is never used for SR; skipping it avoids a 1.2 GB load
 1071              requires_safety_checker=False,  # ADDED
+```
+
+## Change 15 (insert)
+
+**Original**, (insert after line 1021):
+
+```python
+    (nothing)
+```
+
+**Modified**, lines 1075-1075:
+
+```python
+1075          pipeline.to(dtype=torch.float16)  # ADDED: store weights in fp16 (2.1 GB, not 4.3 GB); inference runs in fp16
 ```

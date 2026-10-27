@@ -48,6 +48,8 @@ All changes are in `train_instruct_pix2pix.py` (run `python make_diff.py` for th
    5 equally spaced epochs, 3 labelled samples plus LPIPS/PSNR/SSIM on 32 validation images.
 6. The final saved pipeline carries the run's own schedule (a DDIM scheduler with `trained_betas`), so inference uses
    {βₜˣ} for Run B.
+7. The final pipeline is saved without the (unused) safety checker and with fp16 weights (2.1 GB instead of 4.3 GB).
+   Inference runs in fp16 on the GPU anyway, so this does not change any result.
 
 Validation never consumes the global random state, so Run A and Run B see the same data order, noise and timesteps.
 
@@ -102,6 +104,9 @@ python make_submission.py --results_dir <results folder>
 
 `run_train.sh` always passes `--resume_from_checkpoint latest`, so if Colab disconnects or a Slurm job hits its time limit,
 running the same command again continues from the last saved state (saved every 2 epochs, 368 optimizer steps).
+On Colab the notebook keeps these 5 GB training states on the local disk, not on Drive (a free Drive has 15 GB, and files
+deleted from Drive still count until the Trash is emptied). Logs, samples and the final model are copied to Drive when a
+run finishes, so a Colab run interrupted mid-way starts again from epoch 1.
 
 ## Running on the IITJ HPC (Slurm)
 
