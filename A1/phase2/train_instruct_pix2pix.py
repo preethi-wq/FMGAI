@@ -905,7 +905,7 @@ def main():
 
                 # Add noise to the latents according to the noise magnitude at each timestep
                 # (this is the forward diffusion process)
-                noisy_latents = noise_scheduler.add_noise(latents, noise, timesteps)
+                noisy_latents = noise_scheduler.add_noise(latents.float(), noise.float(), timesteps).to(latents.dtype)  # MODIFIED: in fp32, as fp16 rounds abar_t near 1 and distorts sqrt(1 - abar_t)
                 if not schedule_checked:  # ADDED: one-time proof that the forward process uses this run's schedule
                     check = sr_common.verify_add_noise(  # ADDED
                         noisy_latents, latents, noise, timesteps, original_betas, args.noise_schedule, EXPONENT_X  # ADDED

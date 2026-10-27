@@ -1,6 +1,6 @@
 # Changes to train_instruct_pix2pix.py (diffusers v0.41.0 example)
 
-15 change blocks; 13 lines marked `# MODIFIED`, 55 lines marked `# ADDED`.
+15 change blocks; 14 lines marked `# MODIFIED`, 55 lines marked `# ADDED`.
 
 ## Change 1 (insert)
 
@@ -190,17 +190,18 @@
  884          epoch_loss_sum, epoch_batches = 0.0, 0  # ADDED: mean train loss per epoch for train_log.csv
 ```
 
-## Change 11 (insert)
+## Change 11 (replace)
 
-**Original**, (insert after line 875):
+**Original**, lines 875-875:
 
 ```python
-    (nothing)
+ 875                  noisy_latents = noise_scheduler.add_noise(latents, noise, timesteps)
 ```
 
-**Modified**, lines 909-917:
+**Modified**, lines 908-917:
 
 ```python
+ 908                  noisy_latents = noise_scheduler.add_noise(latents.float(), noise.float(), timesteps).to(latents.dtype)  # MODIFIED: in fp32, as fp16 rounds abar_t near 1 and distorts sqrt(1 - abar_t)
  909                  if not schedule_checked:  # ADDED: one-time proof that the forward process uses this run's schedule
  910                      check = sr_common.verify_add_noise(  # ADDED
  911                          noisy_latents, latents, noise, timesteps, original_betas, args.noise_schedule, EXPONENT_X  # ADDED

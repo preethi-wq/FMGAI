@@ -48,7 +48,10 @@ All changes are in `train_instruct_pix2pix.py` (run `python make_diff.py` for th
    5 equally spaced epochs, 3 labelled samples plus LPIPS/PSNR/SSIM on 32 validation images.
 6. The final saved pipeline carries the run's own schedule (a DDIM scheduler with `trained_betas`), so inference uses
    {βₜˣ} for Run B.
-7. The final pipeline is saved without the (unused) safety checker and with fp16 weights (2.1 GB instead of 4.3 GB).
+7. The forward process `add_noise` runs in fp32. Under fp16 mixed precision diffusers rounds ᾱₜ to fp16 before taking
+   √(1 − ᾱₜ); near ᾱₜ = 1 fp16 values are 0.0005 apart, which puts the noise level more than 10% off on 41 of the 1000
+   timesteps of {βₜˣ} (and on none of {βₜ}), so without this Run B would be measured against a precision artefact.
+8. The final pipeline is saved without the (unused) safety checker and with fp16 weights (2.1 GB instead of 4.3 GB).
    Inference runs in fp16 on the GPU anyway, so this does not change any result.
 
 Validation never consumes the global random state, so Run A and Run B see the same data order, noise and timesteps.

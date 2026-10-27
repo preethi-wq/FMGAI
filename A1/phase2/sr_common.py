@@ -279,7 +279,7 @@ def validation_loss(unet, vae, text_encoder, tokenizer, noise_scheduler, rows, d
         cond = vae.encode(lr).latent_dist.mode()
         noise = torch.randn(latents.shape, generator=g).to(device, latents.dtype)
         t = torch.randint(0, noise_scheduler.config.num_train_timesteps, (len(chunk),), generator=g).to(device)
-        noisy = noise_scheduler.add_noise(latents, noise, t)
+        noisy = noise_scheduler.add_noise(latents.float(), noise.float(), t).to(latents.dtype)  # fp32: see training loop
         pred = unet(torch.cat([noisy, cond], dim=1), t, text.expand(len(chunk), -1, -1), return_dict=False)[0]
         total += F.mse_loss(pred.float(), noise.float(), reduction="sum").item() / noise[0].numel()
         count += len(chunk)
