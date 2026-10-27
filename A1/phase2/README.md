@@ -116,7 +116,7 @@ downloads happen once on the login node and the jobs run with `HF_HUB_OFFLINE=1`
 1. Copy this folder to the cluster (from your laptop): `ssh <user>@hpclogin.iitj.ac.in mkdir -p FMGAI_A1`, then
    `scp -r phase2 <user>@hpclogin.iitj.ac.in:FMGAI_A1/`
 2. On the login node, open `hpc/config.sh` and set the values marked CHECK. `sinfo` gives the GPU partition name and time
-   limit, and `sinfo -o "%P %G"` gives the GPU resource name. If `$HOME` has less than about 40 GB free, point `WORK_ROOT` at scratch.
+   limit, and `sinfo -o "%P %G"` gives the GPU resource name. If `$HOME` has less than about 30 GB free, point `WORK_ROOT` at scratch.
 3. One-time setup on the login node (Miniforge, Python env, torch, model/dataset/LPIPS downloads, about 20 min):
    `cd ~/FMGAI_A1/phase2 && bash hpc/setup_env.sh`
 4. Smoke test (about 10 min on the GPU): `bash hpc/submit.sh smoke`, then check that the log ends in `SMOKE TEST PASSED`.
