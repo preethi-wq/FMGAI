@@ -23,10 +23,14 @@ Task, model, dataset and exponent are the ones in the Phase 1 declaration:
 | `plot_schedule.py` | Schedule Analysis plots and table (numpy only) |
 | `make_figures.py` | Loss curves, checkpoint grids, comparison figure, results table |
 | `make_diff.py` | `changed_lines.md` and `implementation_diff.html` for the Implementation section; fails if a changed line is unmarked |
+| `run_train.sh` | The fine-tuning command with every hyperparameter, used by both Colab and the HPC jobs |
+| `env_report.py` | Writes the software/GPU versions to `environment.txt` |
+| `make_submission.py` | Builds the submission zip (code, logs, samples, scores, trajectories, figures) |
 | `FMGAI_A1_phase2_colab.ipynb` | Runs everything on Colab in order |
+| `hpc/` | The same pipeline as Slurm jobs for the IITJ HPC: `config.sh`, `setup_env.sh`, `submit.sh`, `jobs/*.sbatch` |
 
-The new files (`sr_common.py`, `prepare_data.py`, `infer.py`, `plot_*`, `make_*`) are not part of the original codebase, so
-each starts with an `# ADDED FILE` header instead of marking every line.
+The new files (`sr_common.py`, `prepare_data.py`, `infer.py`, `plot_*`, `make_*`, `run_train.sh`, `env_report.py`, `hpc/`)
+are not part of the original codebase, so each starts with an `# ADDED FILE` header instead of marking every line.
 
 ## What was changed in the codebase
 
@@ -49,7 +53,7 @@ Validation never consumes the global random state, so Run A and Run B see the sa
 
 ## Environment
 
-Run on Google Colab with a single GPU. `FMGAI_A1_phase2_colab.ipynb` writes the exact versions to `environment.txt`.
+Run with a single GPU, on Google Colab or the IITJ HPC. Both write the exact versions to `environment.txt` (via `env_report.py`).
 **Copy them into this table before submitting:**
 
 | | Version |
@@ -81,23 +85,9 @@ python make_diff.py --out_dir figures
 python infer.py --run bicubic --data_dir data --out_dir eval
 python infer.py --run run0    --data_dir data --out_dir eval
 
-# Run A: original schedule {beta_t}
-python train_instruct_pix2pix.py --noise_schedule original --output_dir outputs/runA \
-  --pretrained_model_name_or_path timbrooks/instruct-pix2pix --data_dir data \
-  --resolution 256 --random_flip --train_batch_size 4 --gradient_accumulation_steps 2 \
-  --num_train_epochs 10 --learning_rate 5e-5 --lr_scheduler constant --lr_warmup_steps 0 \
-  --adam_weight_decay 1e-2 --max_grad_norm 1.0 --conditioning_dropout_prob 0.05 \
-  --mixed_precision fp16 --use_8bit_adam --gradient_checkpointing \
-  --checkpointing_steps 368 --checkpoints_total_limit 1 --seed 42
-
-# Run B: modified schedule {beta_t ** 1.60}, identical arguments apart from the two flags on the first line
-python train_instruct_pix2pix.py --noise_schedule power --output_dir outputs/runB \
-  --pretrained_model_name_or_path timbrooks/instruct-pix2pix --data_dir data \
-  --resolution 256 --random_flip --train_batch_size 4 --gradient_accumulation_steps 2 \
-  --num_train_epochs 10 --learning_rate 5e-5 --lr_scheduler constant --lr_warmup_steps 0 \
-  --adam_weight_decay 1e-2 --max_grad_norm 1.0 --conditioning_dropout_prob 0.05 \
-  --mixed_precision fp16 --use_8bit_adam --gradient_checkpointing \
-  --checkpointing_steps 368 --checkpoints_total_limit 1 --seed 42
+# Run A and Run B: all hyperparameters are in run_train.sh; the schedule is the only argument that differs
+bash run_train.sh original outputs/runA data   # Run A: original schedule {beta_t}
+bash run_train.sh power    outputs/runB data   # Run B: modified schedule {beta_t ** 1.60}
 
 # Test-set evaluation and trajectories of the final fine-tuned models
 python infer.py --run runA --data_dir data --out_dir eval --model_dir outputs/runA
@@ -105,10 +95,33 @@ python infer.py --run runB --data_dir data --out_dir eval --model_dir outputs/ru
 
 # Report figures and the results table
 python make_figures.py --runs_dir outputs --eval_dir eval --data_dir data --out_dir figures
+
+# Submission zip (expects outputs/, eval/, figures/, environment.txt, splits.csv in the results folder)
+python make_submission.py --results_dir <results folder>
 ```
 
-If Colab disconnects during training, rerun the same command with `--resume_from_checkpoint latest`. A training state is saved
-every 2 epochs (368 optimizer steps).
+`run_train.sh` always passes `--resume_from_checkpoint latest`, so if Colab disconnects or a Slurm job hits its time limit,
+running the same command again continues from the last saved state (saved every 2 epochs, 368 optimizer steps).
+
+## Running on the IITJ HPC (Slurm)
+
+The `hpc/` folder runs the same scripts as the notebook, as batch jobs. Compute nodes may have no internet, so all
+downloads happen once on the login node and the jobs run with `HF_HUB_OFFLINE=1`.
+
+1. Copy this folder to the cluster (from your laptop): `ssh <user>@hpclogin.iitj.ac.in mkdir -p FMGAI_A1`, then
+   `scp -r phase2 <user>@hpclogin.iitj.ac.in:FMGAI_A1/`
+2. On the login node, open `hpc/config.sh` and set the values marked CHECK. `sinfo` gives the GPU partition name and time
+   limit, and `sinfo -o "%P %G"` gives the GPU resource name. If `$HOME` has less than about 40 GB free, point `WORK_ROOT` at scratch.
+3. One-time setup on the login node (Miniforge, Python env, torch, model/dataset/LPIPS downloads, about 20 min):
+   `cd ~/FMGAI_A1/phase2 && bash hpc/setup_env.sh`
+4. Smoke test (about 10 min on the GPU): `bash hpc/submit.sh smoke`, then check that the log ends in `SMOKE TEST PASSED`.
+5. Everything: `bash hpc/submit.sh all`. This submits prepare → baseline (Run 0) + Run A + Run B in parallel →
+   evaluation of each → figures and zip, chained with `--dependency=afterok`.
+6. Watch with `squeue -u $USER`. Logs go to `$RESULTS_DIR/slurm/`. If a training job ends in TIMEOUT, `scancel` the
+   jobs left waiting on it, run `bash hpc/submit.sh train runA` (or `runB`; it resumes), then `bash hpc/submit.sh finish`.
+7. Copy back the zip: `scp <user>@hpclogin.iitj.ac.in:~/FMGAI_A1/results/FMGAI_A1_phase2_submission.zip .`
+
+Run A and Run B should run on the same GPU type, on one platform, so the only difference between them is the schedule.
 
 ## Hyperparameters (identical for Run A and Run B)
 

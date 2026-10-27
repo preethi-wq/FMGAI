@@ -1067,6 +1067,8 @@ def main():
             vae=unwrap_model(vae),
             unet=unwrap_model(unet),
             scheduler=sr_common.make_ddim(noise_scheduler.config, run_betas),  # ADDED: save this run's schedule
+            safety_checker=None,  # ADDED: the NSFW checker is never used for SR; skipping it avoids a 1.2 GB load
+            requires_safety_checker=False,  # ADDED
             revision=args.revision,
             variant=args.variant,
         )

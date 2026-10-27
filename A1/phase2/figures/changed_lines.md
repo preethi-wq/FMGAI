@@ -1,6 +1,6 @@
 # Changes to train_instruct_pix2pix.py (diffusers v0.41.0 example)
 
-14 change blocks; 13 lines marked `# MODIFIED`, 52 lines marked `# ADDED`.
+14 change blocks; 13 lines marked `# MODIFIED`, 54 lines marked `# ADDED`.
 
 ## Change 1 (insert)
 
@@ -254,8 +254,10 @@
     (nothing)
 ```
 
-**Modified**, lines 1069-1069:
+**Modified**, lines 1069-1071:
 
 ```python
 1069              scheduler=sr_common.make_ddim(noise_scheduler.config, run_betas),  # ADDED: save this run's schedule
+1070              safety_checker=None,  # ADDED: the NSFW checker is never used for SR; skipping it avoids a 1.2 GB load
+1071              requires_safety_checker=False,  # ADDED
 ```
